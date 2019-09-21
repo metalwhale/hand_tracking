@@ -7,3 +7,5 @@ WORKDIR /root/hand_tracking
 RUN pip install opencv-python Pillow
 
 RUN pip install tensorflow-1.14.1-cp36-cp36m-linux_x86_64.whl
+
+ENTRYPOINT python run.py

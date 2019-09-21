@@ -1,13 +1,11 @@
 import cv2
-import tensorflow as tf
-from PIL import Image, ImageDraw
-import numpy as np
 from hand_tracker import HandTracker
 
 WINDOW = "Hand Tracking"
 PALM_MODEL_PATH = "./palm_detection.tflite"
 LANDMARK_MODEL_PATH = "./hand_landmark.tflite"
 ANCHORS_PATH = "./anchors.csv"
+OUTPUT_PATH = "output.avi"
 
 POINT_COLOR = (0, 255, 0)
 CONNECTION_COLOR = (255, 0, 0)
@@ -15,6 +13,9 @@ THICKNESS = 2
 
 cv2.namedWindow(WINDOW)
 capture = cv2.VideoCapture(0)
+width = int(capture.get(3))
+height = int(capture.get(4))
+writer = cv2.VideoWriter(OUTPUT_PATH, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'), 10.0, (width, height))
 
 if capture.isOpened():
     hasFrame, frame = capture.read()
@@ -62,9 +63,12 @@ while hasFrame:
             x1, y1 = points[connection[1]]
             cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), CONNECTION_COLOR, THICKNESS)
     cv2.imshow(WINDOW, frame)
+    writer.write(frame)
     hasFrame, frame = capture.read()
     key = cv2.waitKey(20)
     if key == 27:
         break
 
-cv2.destroyWindow(WINDOW)
+capture.release()
+writer.release()
+cv2.destroyAllWindows()
