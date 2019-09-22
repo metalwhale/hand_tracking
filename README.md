@@ -1,9 +1,9 @@
 ## Hand tracking
 
 ### 1. ファイル説明
-- `palm_detection.tflite`（手のひら検出）モデルファイルと`hand_landmark.tflite`（ランマーク検出）モデルファイル：[*mediapipe*]レポジトリよりダウンロードしました。
+- `palm_detection_without_custom_op.tflite`（手のひら検出）モデルファイル：[*mediapipe-models*]レポジトリよりダウンロードしました。
+- `hand_landmark.tflite`（ランマーク検出）モデルファイル：[*mediapipe*]レポジトリよりダウンロードしました。
 - `anchors.csv`ファイルと`hand_tracker.py`ファイル：[*hand_tracking*]レポジトリよりダウンロードしました。
-- `tensorflow-1.14.1-cp36-cp36m-linux_x86_64.whl`wheelファイル：[*tensorflow*ソースからのビルド]と[*hand_tracking*]レポジトリの説明を参考し、Python APIによる上記のモデルファイルを使えるこのカスタムwheelファイルを*tensorflow*ソースから作成しました。
 - `convert.py`ファイル：この[gist]よりコピーしました。
 
 ### 2. 実施方法
@@ -25,6 +25,7 @@ $ docker run --rm --device=/dev/video0:/dev/video0 -v /tmp/.X11-unix:/tmp/.X11-u
 ### 3. 結果
 ![Result](/output.gif?raw=true "Result")
 
+[*mediapipe-models*]: https://github.com/junhwanjang/mediapipe-models/tree/master/palm_detection/mediapipe_models
 [*mediapipe*]: https://github.com/google/mediapipe/tree/master/mediapipe/models
 [*hand_tracking*]: https://github.com/wolterlw/hand_tracking
 [*tensorflow*ソースからのビルド]: https://www.tensorflow.org/install/source#docker_linux_builds

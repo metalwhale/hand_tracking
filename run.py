@@ -2,7 +2,7 @@ import cv2
 from hand_tracker import HandTracker
 
 WINDOW = "Hand Tracking"
-PALM_MODEL_PATH = "./palm_detection.tflite"
+PALM_MODEL_PATH = "./palm_detection_without_custom_op.tflite"
 LANDMARK_MODEL_PATH = "./hand_landmark.tflite"
 ANCHORS_PATH = "./anchors.csv"
 OUTPUT_PATH = "output.avi"
