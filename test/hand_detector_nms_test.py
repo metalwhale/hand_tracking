@@ -1,19 +1,15 @@
 import cv2
 import numpy as np
 
-from hand_tracker import HandTracker
-from non_maximum_suppression import non_max_suppression_fast
+from src.hand_tracker import HandTracker
 
 ESCAPE_KEY_CODE = 27
 
 WINDOW = "Hand Tracking"
-PALM_MODEL_PATH = "./palm_detection_without_custom_op.tflite"
-LANDMARK_MODEL_PATH = "./hand_landmark.tflite"
-ANCHORS_PATH = "./anchors.csv"
+PALM_MODEL_PATH = "models/palm_detection_without_custom_op.tflite"
+LANDMARK_MODEL_PATH = "models/hand_landmark.tflite"
+ANCHORS_PATH = "models/anchors.csv"
 
-POINT_COLOR = (0, 255, 0)
-CONNECTION_COLOR = (255, 0, 0)
-THICKNESS = 2
 
 DRAW_ANCHORS = False
 DRAW_DETECTION_BOXES = True
