@@ -3,6 +3,9 @@ import cv2
 import numpy as np
 import tensorflow as tf
 
+from non_maximum_suppression import non_max_suppression_fast
+
+
 class HandTracker():
     r"""
     Class to use Google's Mediapipe HandTracking pipeline from Python.
@@ -130,23 +133,31 @@ class HandTracker():
         out_clf = self.interp_palm.get_tensor(self.out_clf_idx)[0,:,0]
 
         # finding the best prediction
-        # TODO: replace it with non-max suppression
-        detecion_mask = self._sigm(out_clf) > 0.5
+        probabilities = self._sigm(out_clf)
+        detecion_mask = probabilities > 0.5
         candidate_detect = out_reg[detecion_mask]
         candidate_anchors = self.anchors[detecion_mask]
+        probabilities = probabilities[detecion_mask]
 
         if candidate_detect.shape[0] == 0:
             print("No hands found")
             return None, None, None
-        # picking the widest suggestion while NMS is not implemented
-        max_idx = np.argmax(candidate_detect[:, 3])
+
+        # Pick the best bounding box with non maximum suppression
+        # the boxes must be moved by the corresponding anchor first
+        moved_candidate_detect = candidate_detect.copy()
+        moved_candidate_detect[:, :2] = candidate_detect[:, :2] + (candidate_anchors[:, :2] * 256)
+        box_ids = non_max_suppression_fast(moved_candidate_detect[:, :4], probabilities)
+
+        # Pick the first detected hand. Could be adapted for multi hand recognition
+        box_ids = box_ids[0]
 
         # bounding box offsets, width and height
-        dx,dy,w,h = candidate_detect[max_idx, :4]
-        center_wo_offst = candidate_anchors[max_idx,:2] * 256
+        dx,dy,w,h = candidate_detect[box_ids, :4]
+        center_wo_offst = candidate_anchors[box_ids,:2] * 256
 
         # 7 initial keypoints
-        keypoints = center_wo_offst + candidate_detect[max_idx,4:].reshape(-1,2)
+        keypoints = center_wo_offst + candidate_detect[box_ids,4:].reshape(-1,2)
         side = max(w,h) * self.box_enlarge
 
         # now we need to move and rotate the detected hand for it to occupy a
@@ -160,7 +171,7 @@ class HandTracker():
         debug_info = {
             "detection_candidates": candidate_detect,
             "anchor_candidates": candidate_anchors,
-            "selected_candidate_max": max_idx,
+            "selected_box_id": box_ids,
         }
 
         return source, keypoints, debug_info

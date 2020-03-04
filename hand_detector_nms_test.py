@@ -18,8 +18,7 @@ THICKNESS = 2
 DRAW_ANCHORS = False
 DRAW_DETECTION_BOXES = True
 DRAW_BEST_DETECTION_BOX_NMS = True
-DRAW_BEST_DETECTION_BOX_MAX_SIZE = True
-DRAW_HAND_KEYPOINTS = False
+DRAW_HAND_KEYPOINTS = True
 
 
 def main():
@@ -51,7 +50,7 @@ def main():
         if debug_info is not None:
             candidate_detect = debug_info["detection_candidates"]
             candidate_anchors = debug_info["anchor_candidates"]
-            selected_candidate_max = debug_info["selected_candidate_max"]
+            selected_box_id = debug_info["selected_box_id"]
 
         if DRAW_ANCHORS and debug_info is not None:
             for anchor in candidate_anchors:
@@ -72,43 +71,24 @@ def main():
                 box -= padding
                 frame = draw_box(frame, box)
 
-
-
         if DRAW_HAND_KEYPOINTS and debug_info is not None:
-            for i, detection in enumerate(candidate_detect):
-                center_wo_offst = candidate_anchors[i, :2] * 256
-                hand_key_points = center_wo_offst + detection[4:].reshape(-1, 2)
-                for key_point in hand_key_points:
-                    key_point *= scale
-                    key_point -= padding
-                    cv2.circle(frame, tuple(key_point.astype("int")), color=(255, 255, 255), radius=5, thickness=2)
+            detection = candidate_detect[selected_box_id]
+            center_wo_offst = candidate_anchors[i, :2] * 256
+            hand_key_points = center_wo_offst + detection[4:].reshape(-1, 2)
+            for key_point in hand_key_points:
+                key_point *= scale
+                key_point -= padding
+                cv2.circle(frame, tuple(key_point.astype("int")), color=(255, 255, 255), radius=5, thickness=2)
 
-        if DRAW_BEST_DETECTION_BOX_MAX_SIZE and debug_info is not None:
-            detection = candidate_detect[selected_candidate_max]
+        if DRAW_BEST_DETECTION_BOX_NMS and debug_info is not None:
+            detection = candidate_detect[selected_box_id]
             dx, dy, w, h = detection[:4]
-            center_wo_offst = candidate_anchors[selected_candidate_max, :2] * 256
+            center_wo_offst = candidate_anchors[selected_box_id, :2] * 256
             box = box_from_dimensions(dx - (w / 2), dy - (h / 2), h, w)
             box += center_wo_offst
             box *= scale
             box -= padding
-            frame = draw_box(frame, box, color=(255, 0, 0))
-
-        if DRAW_BEST_DETECTION_BOX_NMS and debug_info is not None:
-            moved_candidate_detect = candidate_detect.copy()
-            moved_candidate_detect[:, :2] = candidate_detect[:, :2] + candidate_anchors[:, :2] * 256
-            box_ids = non_max_suppression_fast(moved_candidate_detect[:, :4])
-            print(f"NMS Boxes: {len(box_ids)}")
-            for i in box_ids:
-                detection = candidate_detect[i]
-                dx, dy, w, h = detection[:4]
-                center_wo_offst = candidate_anchors[i, :2] * 256
-                box = box_from_dimensions(dx - (w / 2), dy - (h / 2), h, w)
-                box += center_wo_offst
-                box *= scale
-                box -= padding
-                frame = draw_box(frame, box, color=(0, 0, 255))
-
-
+            frame = draw_box(frame, box, color=(0, 0, 255))
 
         cv2.imshow(WINDOW, frame)
         hasFrame, frame = capture.read()

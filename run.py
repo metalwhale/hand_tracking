@@ -60,7 +60,7 @@ while hasFrame:
             cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), CONNECTION_COLOR, THICKNESS)
     cv2.imshow(WINDOW, frame)
     hasFrame, frame = capture.read()
-    key = cv2.waitKey(20)
+    key = cv2.waitKey(1)
     if key == 27:
         break
 

@@ -1,7 +1,7 @@
 import numpy as np
 
 
-def non_max_suppression_fast(boxes, overlap_threshold=0.3):
+def non_max_suppression_fast(boxes, probabilities=None, overlap_threshold=0.3):
     """
     Algorithm to filter bounding box proposals by removing the ones with a too low confidence score
     and with too much overlap.
@@ -27,10 +27,19 @@ def non_max_suppression_fast(boxes, overlap_threshold=0.3):
     x2 = boxes[:, 0] + (boxes[:, 2] / [2])  # center x + width/2
     y2 = boxes[:, 1] + (boxes[:, 3] / [2])  # center y + height/2
 
-    # compute the area of the bounding boxes and sort the bounding
-    # boxes by the bottom-right y-coordinate of the bounding box
+    # compute the area of the bounding boxes and grab the indexes to sort
+    # (in the case that no probabilities are provided, simply sort on the
+    # bottom-left y-coordinate)
     area = boxes[:, 2] * boxes[:, 3]  # width * height
-    idxs = np.argsort(y2)
+    idxs = y2
+
+
+    # if probabilities are provided, sort on them instead
+    if probabilities is not None:
+        idxs = probabilities
+
+    # sort the indexes
+    idxs = np.argsort(idxs)
     # keep looping while some indexes still remain in the indexes
     # list
     while len(idxs) > 0:
