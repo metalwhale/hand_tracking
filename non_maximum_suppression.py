@@ -13,7 +13,7 @@ def non_max_suppression_fast(boxes, overlap_threshold=0.3):
     :return: filtered boxes
     """
     # if there are no boxes, return an empty list
-    if len(boxes) == 0:
+    if boxes.shape[1] == 0:
         return []
     # if the bounding boxes integers, convert them to floats --
     # this is important since we'll be doing a bunch of divisions
@@ -22,13 +22,14 @@ def non_max_suppression_fast(boxes, overlap_threshold=0.3):
     # initialize the list of picked indexes
     pick = []
     # grab the coordinates of the bounding boxes
-    x1 = boxes[:, 0]
-    y1 = boxes[:, 1]
-    x2 = boxes[:, 2]
-    y2 = boxes[:, 3]
+    x1 = boxes[:, 0] - (boxes[:, 2] / [2])  # center x - width/2
+    y1 = boxes[:, 1] - (boxes[:, 3] / [2])  # center y - height/2
+    x2 = boxes[:, 0] + (boxes[:, 2] / [2])  # center x + width/2
+    y2 = boxes[:, 1] + (boxes[:, 3] / [2])  # center y + height/2
+
     # compute the area of the bounding boxes and sort the bounding
     # boxes by the bottom-right y-coordinate of the bounding box
-    area = (x2 - x1 + 1) * (y2 - y1 + 1)
+    area = boxes[:, 2] * boxes[:, 3]  # width * height
     idxs = np.argsort(y2)
     # keep looping while some indexes still remain in the indexes
     # list
@@ -54,4 +55,4 @@ def non_max_suppression_fast(boxes, overlap_threshold=0.3):
         idxs = np.delete(idxs, np.concatenate(([last],
                                                np.where(overlap > overlap_threshold)[0])))
     # return only the bounding boxes that were picked
-    return boxes[pick]
+    return pick

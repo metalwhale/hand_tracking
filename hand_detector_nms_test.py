@@ -19,10 +19,7 @@ DRAW_ANCHORS = False
 DRAW_DETECTION_BOXES = True
 DRAW_BEST_DETECTION_BOX_NMS = True
 DRAW_BEST_DETECTION_BOX_MAX_SIZE = True
-DRAW_HAND_KEYPOINTS = True
-
-
-
+DRAW_HAND_KEYPOINTS = False
 
 
 def main():
@@ -34,26 +31,6 @@ def main():
     else:
         hasFrame = False
 
-    #        8   12  16  20
-    #        |   |   |   |
-    #        7   11  15  19
-    #    4   |   |   |   |
-    #    |   6   10  14  18
-    #    3   |   |   |   |
-    #    |   5---9---13--17
-    #    2    \         /
-    #     \    \       /
-    #      1    \     /
-    #       \    \   /
-    #        ------0-
-    connections = [
-        (0, 1), (1, 2), (2, 3), (3, 4),
-        (5, 6), (6, 7), (7, 8),
-        (9, 10), (10, 11), (11, 12),
-        (13, 14), (14, 15), (15, 16),
-        (17, 18), (18, 19), (19, 20),
-        (0, 5), (5, 9), (9, 13), (13, 17), (0, 17)
-    ]
 
     detector = HandTracker(
         PALM_MODEL_PATH,
@@ -79,8 +56,8 @@ def main():
         if DRAW_ANCHORS and debug_info is not None:
             for anchor in candidate_anchors:
                 dx, dy = anchor[:2] * 256
-                w, h = anchor[2:] * 256 * 0.2 # no idea of 0.2 is the correct size multiplicator
-                box = box_from_dimensions(dx - (w/2), dy -(h/2), h, w)
+                w, h = anchor[2:] * 256 * 0.2  # no idea of 0.2 is the correct size multiplication
+                box = box_from_dimensions(dx - (w/2), dy - (h/2), h, w)
                 box *= scale
                 box -= padding
                 frame = draw_box(frame, box, color=(200, 0, 0))
@@ -95,31 +72,7 @@ def main():
                 box -= padding
                 frame = draw_box(frame, box)
 
-        if DRAW_BEST_DETECTION_BOX_MAX_SIZE and debug_info is not None:
-            detection = candidate_detect[selected_candidate_max]
-            dx,dy,w,h = detection[:4]
-            center_wo_offst = candidate_anchors[selected_candidate_max, :2] * 256
-            box = box_from_dimensions(dx - (w/2), dy - (h/2), h, w)
-            box += center_wo_offst
-            box *= scale
-            box -= padding
-            frame = draw_box(frame, box, color=(100, 100, 0))
 
-        if DRAW_BEST_DETECTION_BOX_NMS and debug_info is not None:
-            boxes = []
-            for i, detection in enumerate(candidate_detect):
-                dx,dy,w,h = detection[:4]
-                center_wo_offst = candidate_anchors[i, :2] * 256
-                box = box_from_dimensions(dx - (w/2), dy - (h/2), h, w)
-                box += center_wo_offst
-                box *= scale
-                box -= padding
-                boxes.append(box)
-
-            best_boxes = non_max_suppression_fast(np.array(boxes).reshape((-1,8))[:, [0,1,4,5]])
-            for box in best_boxes:
-                box = from_corners(*box)
-                frame = draw_box(frame, box, color=(255, 0, 0))
 
         if DRAW_HAND_KEYPOINTS and debug_info is not None:
             for i, detection in enumerate(candidate_detect):
@@ -129,6 +82,31 @@ def main():
                     key_point *= scale
                     key_point -= padding
                     cv2.circle(frame, tuple(key_point.astype("int")), color=(255, 255, 255), radius=5, thickness=2)
+
+        if DRAW_BEST_DETECTION_BOX_MAX_SIZE and debug_info is not None:
+            detection = candidate_detect[selected_candidate_max]
+            dx, dy, w, h = detection[:4]
+            center_wo_offst = candidate_anchors[selected_candidate_max, :2] * 256
+            box = box_from_dimensions(dx - (w / 2), dy - (h / 2), h, w)
+            box += center_wo_offst
+            box *= scale
+            box -= padding
+            frame = draw_box(frame, box, color=(255, 0, 0))
+
+        if DRAW_BEST_DETECTION_BOX_NMS and debug_info is not None:
+            moved_candidate_detect = candidate_detect.copy()
+            moved_candidate_detect[:, :2] = candidate_detect[:, :2] + candidate_anchors[:, :2] * 256
+            box_ids = non_max_suppression_fast(moved_candidate_detect[:, :4])
+            print(f"NMS Boxes: {len(box_ids)}")
+            for i in box_ids:
+                detection = candidate_detect[i]
+                dx, dy, w, h = detection[:4]
+                center_wo_offst = candidate_anchors[i, :2] * 256
+                box = box_from_dimensions(dx - (w / 2), dy - (h / 2), h, w)
+                box += center_wo_offst
+                box *= scale
+                box -= padding
+                frame = draw_box(frame, box, color=(0, 0, 255))
 
 
 
