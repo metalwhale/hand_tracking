@@ -117,18 +117,27 @@ class HandTracker():
         self.interp_palm.set_tensor(self.in_idx, img_norm[None])
         self.interp_palm.invoke()
 
+        """
+        out_reg shape is [number of anchors, 18]
+        Second dimension 0 - 4 are bounding box offset, width and height: dx, dy, w ,h
+        Second dimension 4 - 18 are 7 hand keypoint x and y coordinates: x1,y1,x2,y2,...x7,y7
+        """
         out_reg = self.interp_palm.get_tensor(self.out_reg_idx)[0]
+        """
+        out_clf shape is [number of anchors]
+        it is the classification score if there is a hand for each anchor box
+        """
         out_clf = self.interp_palm.get_tensor(self.out_clf_idx)[0,:,0]
 
         # finding the best prediction
         # TODO: replace it with non-max suppression
-        detecion_mask = self._sigm(out_clf) > 0.7
+        detecion_mask = self._sigm(out_clf) > 0.5
         candidate_detect = out_reg[detecion_mask]
         candidate_anchors = self.anchors[detecion_mask]
 
         if candidate_detect.shape[0] == 0:
             print("No hands found")
-            return None, None
+            return None, None, None
         # picking the widest suggestion while NMS is not implemented
         max_idx = np.argmax(candidate_detect[:, 3])
 
@@ -147,7 +156,14 @@ class HandTracker():
         # TODO: replace triangle with the bbox directly
         source = self._get_triangle(keypoints[0], keypoints[2], side)
         source -= (keypoints[0] - keypoints[2]) * self.box_shift
-        return source, keypoints
+
+        debug_info = {
+            "detection_candidates": candidate_detect,
+            "anchor_candidates": candidate_anchors,
+            "selected_candidate_max": max_idx,
+        }
+
+        return source, keypoints, debug_info
 
     def preprocess_img(self, img):
         # fit the image into a 256x256 square
@@ -167,7 +183,7 @@ class HandTracker():
     def __call__(self, img):
         img_pad, img_norm, pad = self.preprocess_img(img)
 
-        source, keypoints = self.detect_hand(img_norm)
+        source, keypoints, _ = self.detect_hand(img_norm)
         if source is None:
             return None, None
 
