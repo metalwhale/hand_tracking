@@ -1,10 +1,10 @@
 import cv2
-from hand_tracker import HandTracker
+from src.hand_tracker import HandTracker
 
 WINDOW = "Hand Tracking"
-PALM_MODEL_PATH = "./palm_detection_without_custom_op.tflite"
-LANDMARK_MODEL_PATH = "./hand_landmark.tflite"
-ANCHORS_PATH = "./anchors.csv"
+PALM_MODEL_PATH = "models/palm_detection_without_custom_op.tflite"
+LANDMARK_MODEL_PATH = "models/hand_landmark.tflite"
+ANCHORS_PATH = "models/anchors.csv"
 
 POINT_COLOR = (0, 255, 0)
 CONNECTION_COLOR = (255, 0, 0)
@@ -60,7 +60,7 @@ while hasFrame:
             cv2.line(frame, (int(x0), int(y0)), (int(x1), int(y1)), CONNECTION_COLOR, THICKNESS)
     cv2.imshow(WINDOW, frame)
     hasFrame, frame = capture.read()
-    key = cv2.waitKey(20)
+    key = cv2.waitKey(1)
     if key == 27:
         break
 
