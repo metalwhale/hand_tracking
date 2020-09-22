@@ -1,6 +1,5 @@
 import cv2
 from src.hand_tracker import HandTracker
-from scipy.spatial import ConvexHull, convex_hull_plot_2d
 import matplotlib.pyplot as plt
 
 WINDOW = "Hand Tracking"
@@ -12,7 +11,7 @@ HULL = True
 POINT_COLOR = (0, 255, 0)
 CONNECTION_COLOR = (255, 0, 0)
 HULL_COLOR = (0, 0, 255)
-THICKNESS = 1
+THICKNESS = 2
 HULL_THICKNESS = 2
 
 
