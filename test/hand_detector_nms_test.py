@@ -11,7 +11,7 @@ LANDMARK_MODEL_PATH = "models/hand_landmark.tflite"
 ANCHORS_PATH = "models/anchors.csv"
 
 
-DRAW_ANCHORS = True
+DRAW_ANCHORS = False
 DRAW_DETECTION_BOXES = True
 DRAW_BEST_DETECTION_BOX_NMS = True
 DRAW_HAND_KEYPOINTS = True
@@ -39,9 +39,8 @@ def main():
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         scale = np.array(np.max(frame.shape[:2]) / 256.0)
         padding = [0, 280]
-
         img_pad, img_norm, pad = detector.preprocess_img(image)
-        source, keypoints, debug_info = detector.detect_hand(img_norm,0)
+        source, keypoints, debug_info = detector.detect_hand(img_norm)
         if debug_info is not None:
             candidate_detect = debug_info["detection_candidates"]
             candidate_anchors = debug_info["anchor_candidates"]
@@ -84,7 +83,7 @@ def main():
             box *= scale
             box -= padding
             frame = draw_box(frame, box, color=(0, 0, 255))
-            
+
         cv2.imshow(WINDOW, frame)
         hasFrame, frame = capture.read()
         key = cv2.waitKey(20)
