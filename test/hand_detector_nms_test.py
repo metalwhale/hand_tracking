@@ -42,11 +42,11 @@ def main():
 
         img_pad, img_norm, pad = detector.preprocess_img(image)
         source, keypoints, debug_info = detector.detect_hand(img_norm,0)
-        source2,keypoints2,debug_info2 = detector.detect_hand(img_norm,1)
         if debug_info is not None:
             candidate_detect = debug_info["detection_candidates"]
             candidate_anchors = debug_info["anchor_candidates"]
             selected_box_id = debug_info["selected_box_id"]
+
         if DRAW_ANCHORS and debug_info is not None:
             for anchor in candidate_anchors:
                 dx, dy = anchor[:2] * 256
@@ -55,6 +55,7 @@ def main():
                 box *= scale
                 box -= padding
                 frame = draw_box(frame, box, color=(200, 0, 0))
+
         if DRAW_DETECTION_BOXES and debug_info is not None:
             for i, detection in enumerate(candidate_detect):
                 dx,dy,w,h = detection[:4]
@@ -83,6 +84,7 @@ def main():
             box *= scale
             box -= padding
             frame = draw_box(frame, box, color=(0, 0, 255))
+            
         cv2.imshow(WINDOW, frame)
         hasFrame, frame = capture.read()
         key = cv2.waitKey(20)
