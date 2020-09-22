@@ -11,7 +11,7 @@ LANDMARK_MODEL_PATH = "models/hand_landmark.tflite"
 ANCHORS_PATH = "models/anchors.csv"
 
 
-DRAW_ANCHORS = False
+DRAW_ANCHORS = True
 DRAW_DETECTION_BOXES = True
 DRAW_BEST_DETECTION_BOX_NMS = True
 DRAW_HAND_KEYPOINTS = True
@@ -41,12 +41,18 @@ def main():
         padding = [0, 280]
 
         img_pad, img_norm, pad = detector.preprocess_img(image)
-        source, keypoints, debug_info = detector.detect_hand(img_norm)
-
+        source, keypoints, debug_info = detector.detect_hand(img_norm,0)
+        source2,keypoints2,debug_info2 = detector.detect_hand(img_norm,1)
         if debug_info is not None:
             candidate_detect = debug_info["detection_candidates"]
             candidate_anchors = debug_info["anchor_candidates"]
             selected_box_id = debug_info["selected_box_id"]
+            print(selected_box_id)
+        if debug_info2 is not None:
+            candidate_detect2 = debug_info2["detection_canditates"]
+            candidate_anchors2 = debug_info2["anchor_candidates"]
+            selected_box_id2= debug_info2["selected_box_id"]
+            print(selected_box_id2)
 
         if DRAW_ANCHORS and debug_info is not None:
             for anchor in candidate_anchors:
@@ -56,7 +62,14 @@ def main():
                 box *= scale
                 box -= padding
                 frame = draw_box(frame, box, color=(200, 0, 0))
-
+        if DRAW_ANCHORS and debug_info2 is not None:
+            for anchor in candidate_anchors2:
+                dx2,dy2 = anchor[:2] * 256
+                w2,h2 = anchor[2:] * 256 *0.2
+                box2=box_from_dimensions(dx2 - (w2/2),dy2-(h2/2),h2,w2)
+                box2*=scale
+                box2-=padding
+                frame = draw_box(frame,box2,color=(200,0,0))
         if DRAW_DETECTION_BOXES and debug_info is not None:
             for i, detection in enumerate(candidate_detect):
                 dx,dy,w,h = detection[:4]
@@ -66,7 +79,15 @@ def main():
                 box *= scale
                 box -= padding
                 frame = draw_box(frame, box)
-
+        if DRAW_DETECTION_BOXES and debug_info2 is not None:
+            for i,detection in enumerate(candidate_detect2):
+                dx2,dy2,w2,h2 = detection[:4]
+                center_wo_offset2=candidate_anchors2[i,:2]*256
+                box2= box_from_dimensions(dx2 - (w2/2),dy2-(h2/2),h2,w2)
+                box2 += center_wo_offset2
+                box2 *=scale
+                box2 -=padding
+                frame=draw_box(frame,box2)
         if DRAW_HAND_KEYPOINTS and debug_info is not None:
             detection = candidate_detect[selected_box_id]
             center_wo_offst = candidate_anchors[i, :2] * 256
@@ -75,6 +96,15 @@ def main():
                 key_point *= scale
                 key_point -= padding
                 cv2.circle(frame, tuple(key_point.astype("int")), color=(255, 255, 255), radius=5, thickness=2)
+        if DRAW_HAND_KEYPOINTS and debug_info2 is not None:
+            detection2 = candidate_detect2[selected_box_id2]
+            center_wo_offset2 = candidate_anchors2[i,:2]*256
+            hand_key_points2 = center_wo_offset2 + detection2[4:].reshape(-1,2)
+            for key_point in hand_key_points2:
+                key_point *=scale
+                key_point -=padding
+                cv2.circle(frame,tuple(key_point.astype("int")),color=(255,255,255),radius=5,thickness=2)
+
 
         if DRAW_BEST_DETECTION_BOX_NMS and debug_info is not None:
             detection = candidate_detect[selected_box_id]
@@ -85,6 +115,14 @@ def main():
             box *= scale
             box -= padding
             frame = draw_box(frame, box, color=(0, 0, 255))
+        if DRAW_BEST_DETECTION_BOX_NMS and debug_info2 is not None:
+            detection2 = candidate_detect2[selected_box_id2]
+            dx2,dy2,w2,h2 = detection2[:4]
+            center_wo_offset2 = candidate_anchors2[selected_box_id2,:2]*256
+            box = box_from_dimensions(dx2,(w2/2),dy2 ( h2/2),h2,w2)
+            box +=center_wo_offset2
+            box*=scale
+            box-=padding
 
         cv2.imshow(WINDOW, frame)
         hasFrame, frame = capture.read()
