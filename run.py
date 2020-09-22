@@ -1,6 +1,5 @@
 import cv2
 from src.hand_tracker import HandTracker
-import matplotlib.pyplot as plt
 
 WINDOW = "Hand Tracking"
 PALM_MODEL_PATH = "models/palm_detection_without_custom_op.tflite"
