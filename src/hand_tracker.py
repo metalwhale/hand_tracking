@@ -109,7 +109,7 @@ class HandTracker():
         joints = self.interp_joint.get_tensor(self.out_idx_joint)
         return joints.reshape(-1, 2)
 
-    def detect_hand(self, img_norm, index):
+    def detect_hand(self, img_norm):
         assert -1 <= img_norm.min() and img_norm.max() <= 1, \
             "img_norm should be in range [-1, 1]"
         assert img_norm.shape == (256, 256, 3), \
