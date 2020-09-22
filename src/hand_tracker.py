@@ -150,15 +150,12 @@ class HandTracker():
 
         # Pick the first detected hand. Could be adapted for multi hand recognition
         # print(box_ids1)
-        if len(box_ids) > index:
-            box_ids1 = box_ids[index]
-        else:
-            return None, None, None
+        box_ids = box_ids[0]
         # bounding box offsets, width and height
-        dx, dy, w, h = candidate_detect[box_ids1, :4]
-        center_wo_offst = candidate_anchors[box_ids1, :2] * 256
+        dx, dy, w, h = candidate_detect[box_ids, :4]
+        center_wo_offst = candidate_anchors[box_ids, :2] * 256
         # 7 initial keypoints
-        keypoints = center_wo_offst + candidate_detect[box_ids1, 4:].reshape(-1, 2)
+        keypoints = center_wo_offst + candidate_detect[box_ids, 4:].reshape(-1, 2)
         side = max(w, h) * self.box_enlarge
         # now we need to move and rotate the detected hand for it to occupy a
         # 256x256 square
@@ -171,7 +168,7 @@ class HandTracker():
         debug_info = {
             "detection_candidates": candidate_detect,
             "anchor_candidates": candidate_anchors,
-            "selected_box_id": box_ids1,
+            "selected_box_id": box_ids,
         }
 
         return source, keypoints, debug_info
