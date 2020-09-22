@@ -109,7 +109,7 @@ class HandTracker():
         joints = self.interp_joint.get_tensor(self.out_idx_joint)
         return joints.reshape(-1, 2)
 
-    def detect_hand(self, img_norm):
+    def detect_hand(self, img_norm, index=0):
         assert -1 <= img_norm.min() and img_norm.max() <= 1, \
             "img_norm should be in range [-1, 1]"
         assert img_norm.shape == (256, 256, 3), \
@@ -150,12 +150,15 @@ class HandTracker():
 
         # Pick the first detected hand. Could be adapted for multi hand recognition
         # print(box_ids1)
-        box_ids = box_ids[0]
+        if len(box_ids) > index:
+            box_ids1 = box_ids[index]
+        else:
+            return None, None, None
         # bounding box offsets, width and height
-        dx, dy, w, h = candidate_detect[box_ids, :4]
-        center_wo_offst = candidate_anchors[box_ids, :2] * 256
+        dx, dy, w, h = candidate_detect[box_ids1, :4]
+        center_wo_offst = candidate_anchors[box_ids1, :2] * 256
         # 7 initial keypoints
-        keypoints = center_wo_offst + candidate_detect[box_ids, 4:].reshape(-1, 2)
+        keypoints = center_wo_offst + candidate_detect[box_ids1, 4:].reshape(-1, 2)
         side = max(w, h) * self.box_enlarge
         # now we need to move and rotate the detected hand for it to occupy a
         # 256x256 square
@@ -168,7 +171,7 @@ class HandTracker():
         debug_info = {
             "detection_candidates": candidate_detect,
             "anchor_candidates": candidate_anchors,
-            "selected_box_id": box_ids,
+            "selected_box_id": box_ids1,
         }
 
         return source, keypoints, debug_info
