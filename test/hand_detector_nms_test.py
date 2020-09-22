@@ -39,8 +39,10 @@ def main():
         image = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
         scale = np.array(np.max(frame.shape[:2]) / 256.0)
         padding = [0, 280]
+
         img_pad, img_norm, pad = detector.preprocess_img(image)
         source, keypoints, debug_info = detector.detect_hand(img_norm)
+
         if debug_info is not None:
             candidate_detect = debug_info["detection_candidates"]
             candidate_anchors = debug_info["anchor_candidates"]
